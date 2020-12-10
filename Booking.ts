@@ -29,8 +29,7 @@ export class Booking implements IBooking {
 
   setPenalty(returnDate: Date): number {
     const dayInMilliseconds = 1000 * 60 * 60 * 24;
-    const result =
-      (Date.parse(returnDate.toString()) - Date.parse(this.lendDate.toString())) / dayInMilliseconds;
+    const result = (Date.parse(returnDate.toString()) - Date.parse(this.lendDate.toString())) / dayInMilliseconds;
     const daysWithoutPenalty = 7;
     const penaltyValue = 10;
     let penalty = 0;
