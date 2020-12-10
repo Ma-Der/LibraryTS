@@ -1,56 +1,99 @@
-import { Misc } from './Misc';
-import { Booking } from './Booking';
-import { Book } from './Book';
-import { User } from './User';
+import { Misc } from "./Misc";
+import { IBooking, Booking } from "./Booking";
+import { IBook } from "./Book";
+import { IUser } from "./User";
 
-export class Library {
-    
-    bookList: Book[];
-    lendList: Booking[];
-    lendedBookList: Book[];
+interface ILibrary {
+  userList: IUser[];
+  bookList: IBook[];
+  lendList: IBooking[];
+  lendedBookList: IBook[];
+  addBook(...books: IBook[]): void;
+  addUser(user: IUser): void;
+  deleteBook(id: string): void;
+  deleteLendedBook(id: string): void;
+  rentBook(user: IUser, ...books: IBook[]): void;
+  returnBook(user: IUser, returnDate: Date, ...books: IBook[]): void;
+}
 
-    constructor() {
-        this.bookList = [];
-        this.lendList = [];
-        this.lendedBookList = [];
-    }
+export class Library implements ILibrary {
+  userList: IUser[];
+  bookList: IBook[];
+  lendList: IBooking[];
+  lendedBookList: IBook[];
 
-    addBook(...books: Book[]): void {
-        books.forEach(book => {
-            this.bookList.forEach(bookOnList => {if(bookOnList.id === book.id) throw new Error("This book is already in Library.")});
-        });
-        this.bookList.push(...books);
-    }
+  constructor() {
+    this.userList = [];
+    this.bookList = [];
+    this.lendList = [];
+    this.lendedBookList = [];
+  }
 
-    deleteBook(id: string): void {
-        Misc.isStringValid(id);
-        this.bookList = this.bookList.filter(bookOnList => id !== bookOnList.id);
-    }
+  addBook(...books: IBook[]): void {
+    books.forEach((book) => {
+      this.bookList.forEach((bookOnList) => {
+        if (bookOnList.id === book.id)
+          throw new Error("This book is already in Library.");
+      });
+    });
+    this.bookList.push(...books);
+  }
 
-    private deleteLendedBook(id: string): void {
-        Misc.isStringValid(id);
-        this.lendedBookList = this.lendedBookList.filter(bookOnList => id !== bookOnList.id);
-    }
+  addUser(user: IUser): void {
+    if (Misc.isUserExist(user, this.userList))
+      throw new Error("User already exists.");
+    this.userList.push(user);
+  }
 
-    rentBook(user: User, ...books: Book[]): void {
-        const rent = new Booking(user, ...books);
-        this.lendedBookList.map(book => books.includes(book)).filter(el => el === true ? rent.rentBookInformation() : false);
-        this.bookList.filter(book => {if(books.includes(book)) this.deleteBook(book.id)});
-        this.lendList.push(rent);
-        this.lendedBookList.push(...books);
-    }
+  deleteBook(id: string): void {
+    Misc.isStringEmpty(id);
+    this.bookList = this.bookList.filter((bookOnList) => id !== bookOnList.id);
+  }
 
-    returnBook(user: User, returnDate: Date, ...books: Book[]): void {
-        const [rightBooking] = this.lendList.filter(booking => booking.user.id === user.id ? booking : false);
-        const booksShouldBeReturned = rightBooking.books
+  deleteLendedBook(id: string): void {
+    Misc.isStringEmpty(id);
+    this.lendedBookList = this.lendedBookList.filter(
+      (bookOnList) => id !== bookOnList.id
+    );
+  }
 
-        const returnedBooks = books.filter(book => booksShouldBeReturned.includes(book));
-        if(!booksShouldBeReturned.every(book => returnedBooks.includes(book))) throw new Error("Not all books have been returned. Please bring all the books.");
-        if(!books.every(book => returnedBooks.includes(book))) throw new Error("You didn't rent all this books.");
-        returnedBooks.map(book => {
-            this.addBook(book);
-            this.deleteLendedBook(book.id);
-        });
-        rightBooking.returnBook(returnDate);
-    }
+  rentBook(user: IUser, ...books: IBook[]): void {
+    Misc.isBookAvailable(this.bookList, ...books);
+    Misc.isBookAvailable(this.lendedBookList, ...books);
+    if (!Misc.isUserExist(user, this.userList))
+      throw new Error("User does not exist in this library.");
+
+    const rent = new Booking(user, ...books);
+
+    this.bookList.filter((book) => {
+      if (books.includes(book)) this.deleteBook(book.id);
+      return false;
+    });
+    this.lendList.push(rent);
+    this.lendedBookList.push(...books);
+  }
+
+  returnBook(user: IUser, returnDate: Date, ...books: IBook[]): void {
+    if (!Misc.isUserExist(user, this.userList))
+      throw new Error("User does not exist in this library.");
+    const [rightBooking] = this.lendList.filter((booking) =>
+      booking.user.id === user.id ? booking : false
+    );
+    const booksShouldBeReturned = rightBooking.books;
+
+    const returnedBooks = books.filter((book) =>
+      booksShouldBeReturned.includes(book)
+    );
+    if (!booksShouldBeReturned.every(book => returnedBooks.includes(book)))
+      throw new Error(
+        "Not all books have been returned. Please bring all the books."
+      );
+    if (!books.every((book) => returnedBooks.includes(book)))
+      throw new Error("You didn't rent all this books.");
+    returnedBooks.forEach((book) => {
+      this.addBook(book);
+      this.deleteLendedBook(book.id);
+    });
+    rightBooking.returnBook(returnDate);
+  }
 }
