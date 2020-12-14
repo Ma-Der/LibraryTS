@@ -35,7 +35,7 @@ library.rentBook(frank, fixer, fightingDestiny);
 
 library.returnBook(
   matty,
-  Misc.addDays(new Date(), 8),
+  Misc.addDays(new Date(), 10),
   original,
   gambit,
   temptations
