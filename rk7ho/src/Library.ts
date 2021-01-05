@@ -10,8 +10,8 @@ interface ILibrary {
   _lendedBookList: IBook[];
   addBook(...books: IBook[]): void;
   addUser(user: IUser): void;
-  deleteBook(book: IBook): void;
-  _deleteLendedBook(book: IBook): void;
+  deleteBook(id: string): void;
+  _deleteLendedBook(id: string): void;
   rentBook(user: IUser, ...books: IBook[]): void;
   returnBook(user: IUser, returnDate: Date, ...books: IBook[]): void;
 }
@@ -79,11 +79,11 @@ export class Library implements ILibrary {
     if (!Misc.isUserExist(user, this.userList))
       throw new Error("User does not exist in this library.");
 
-    const [rightBooking] = this.lendList.filter((booking) =>
-      booking.user.id === user.id
+    const [rightBooking] = this.lendList.filter(
+      (booking) => booking.user.id === user.id
     );
 
-    if(rightBooking.lendDate > returnDate) {
+    if (rightBooking.lendDate > returnDate) {
       throw new Error("Return date cannot be less than lend date.");
     }
     const booksShouldBeReturned = rightBooking.books;
@@ -91,20 +91,18 @@ export class Library implements ILibrary {
     const returnedBooks = books.filter((book) =>
       booksShouldBeReturned.includes(book)
     );
-    if (!booksShouldBeReturned.every(book => returnedBooks.includes(book)))
+    if (!booksShouldBeReturned.every((book) => returnedBooks.includes(book)))
       throw new Error(
         "Not all books have been returned. Please bring all the books."
       );
     if (!books.every((book) => returnedBooks.includes(book)))
       throw new Error("You didn't rent all this books.");
 
-
     returnedBooks.forEach((book) => {
       this._deleteLendedBook(book);
       this.addBook(book);
     });
 
-    
     rightBooking.returnBook(returnDate);
   }
 }

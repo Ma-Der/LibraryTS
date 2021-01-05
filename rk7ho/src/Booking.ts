@@ -9,7 +9,7 @@ export interface IBooking {
   returnDate: Date;
   penalty: number;
   setPenalty(returnDate: Date): number;
-  returnBook(returnDate: Date): string;
+  returnBook(returnDate: Date): void;
 }
 
 export class Booking implements IBooking {
@@ -28,8 +28,13 @@ export class Booking implements IBooking {
   }
 
   setPenalty(returnDate: Date): number {
+    if (returnDate < this.lendDate)
+      throw new Error("Return date cannot be less than lended date.");
     const dayLengthInMilliseconds = 1000 * 60 * 60 * 24;
-    const result = (Date.parse(returnDate.toString()) - Date.parse(this.lendDate.toString())) / dayLengthInMilliseconds;
+    const result =
+      (Date.parse(returnDate.toString()) -
+        Date.parse(this.lendDate.toString())) /
+      dayLengthInMilliseconds;
     const daysWithoutPenalty = 7;
     const penaltyValue = 10;
     let penalty = 0;
@@ -44,12 +49,12 @@ export class Booking implements IBooking {
     return penalty;
   }
 
-  returnBook(returnDate: Date): string {
+  returnBook(returnDate: Date): void {
     const penalty = this.setPenalty(returnDate);
     if (penalty > 0)
       console.log(
         `${this.user.name} need to pay a penalty of ${this.penalty} PLN.`
       );
-      return `${this.user.name} need to pay a penalty of ${this.penalty} PLN.`;
+    return `${this.user.name} need to pay a penalty of ${this.penalty} PLN.`;
   }
 }
