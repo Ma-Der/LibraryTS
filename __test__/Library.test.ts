@@ -1,158 +1,121 @@
 import { Book } from "../Book";
-import { Booking } from "./Booking";
 import { Library } from "../Library";
 import { User } from "../User";
-import { Misc } from "../Misc";
+
+/*
+
+Bibliotekarz dodał 17 książek do bibilioteki
+  - pomylił się przy jednej i dodał ją 2 razy co spowodowało błąd
+  - 2 książki usunięto ze względu na ich zły stan
+Do biblioteki dopisało się 3 nowych klientów:
+ - przy wprowadzaniu dodano 2 razy tego samego użytkownika co spowodowało błąd
+
+Pierwszy user wypożyczył 4 pozycje, drugi 5, trzeci 3:
+ - przez pomyłkę bibliotekarz wpisał przy wypożyczaniu nazwę klienta który nie istnieje w systemie co spowodowało błąd
+
+ Pierwszy użytkownik zwrócił 3 pozycje po 7 dniach, co spowodowało błąd
+ Drugi użytkownik zwrócił 6 pozycji po 7 dniach, co spowodowało błąd
+ Trzeci zwrócił 3 pozycje po 7 dniach
+
+ Pierwszy zwrócił 4 pozycje po 10 dniach przez co została naliczona kara po 7 dniach za każdy dzień 10zł, czyli 30zł
+ Drugi zwrócił 5 pozycji po 12 dniach przez co została naliczona kara 50zł
+
+ Przy zwrocie pierwszego użytkownika bibliotekarz pomylił się i wstawił datę zwrotu wcześniejszą niż wypożyczenia co spowodowało błąd
+
+*/
 
 const gambit = new Book("Gambit", "Neil Shon", "short description");
-const fightingDestiny = new Book(
-  "Fighting with destiny",
-  "Carl Lewis",
-  "very short description"
-);
-const temptations = new Book(
-  "Temptations",
-  "Tom Nowak",
-  "another short description"
-);
-const original = new Book(
-  "Original Sin",
-  "Jane Below",
-  "so short desscription"
-);
+const fightingDestiny = new Book("Fighting with destiny", "Carl Lewis", "very short description");
+const temptations = new Book("Temptations", "Tom Nowak", "another short description");
+const original = new Book("Original Sin", "Jane Below", "so short desscription");
 const fixer = new Book("Fixer", "John Grisham", "good good book");
+const wyborny = new Book("Wyborny trup", "Agustina Bazterrica", "horror");
+const nurt = new Book("Nurt", "Tim Johnston", "thriller");
+const ostatni = new Book("Ostatni", "Maja Lunde", "romance");
+const babiagora = new Book("W cieniu babiej góry", " Irena Małsa", "document");
+const szepty = new Book("Szepty spoza nicości", "Remigiusz Mróz", "thirller");
+const korona = new Book("Odzyskana korona", "Monika Skabra", "romance");
+const dywan = new Book("Dywan z wkładką", "Marta Kisiel", "comedy");
+const zycie = new Book("Życie między wcieleniami", "Michael Newton", "sci-fi");
+const freebirds = new Book("Free Birds", "Emilia Szelest", "romance");
+const dom = new Book('Dziewiąty dom', "Leigh Bardugo", "thriller");
+const moon = new Book("The Darkest Moon", "Anna Todd", "thriller");
+const lina = new Book("Lina", "Sara Antczak", "document");
+const lin = new Book("Lina", "Sara Antczak", "document");
 
 const matty = new User("Matty");
 const frank = new User("Frank");
 const jerry = new User("Jerry");
+const jared = new User("Jared");
 
 const library = new Library();
 
-describe("Library tests methods behavior", () => {
-  it("addBook should be able to add multiple books", () => {
-    library.addBook(gambit, fightingDestiny, temptations, original, fixer);
-    expect(library.bookList).toEqual([
-      gambit,
-      fightingDestiny,
-      temptations,
-      original,
-      fixer
-    ]);
+describe('To library added', () => {
+  library.addBook(gambit, fightingDestiny, temptations, original, fixer, wyborny, nurt, ostatni, babiagora, szepty, korona, dywan, zycie, freebirds, dom, moon, lina);
+  
+  test('17 books', () => {
+    const properLength = 17;
+    expect(library.bookList).toHaveLength(properLength);
   });
 
-  it("addUser should add new user", () => {
+  test('twice same book', () => {
+    expect(() => library.addBook(gambit)).toThrowError("This book is already in Library.");
+  });
+
+  describe('users', () => {
     library.addUser(matty);
-    expect(library.userList).toEqual([matty]);
-  });
-
-  it("deleteBook should delete book from book list", () => {
-    library.deleteBook(gambit);
-    expect(library.bookList).toEqual([
-      fightingDestiny,
-      temptations,
-      original,
-      fixer
-    ]);
-  });
-
-  it("rentBook should send book or books to lendedBooksList, add booking to lendList, remove them from bookList", () => {
-    library.rentBook(matty, original, temptations);
-
-    expect(library._lendedBookList).toEqual([original, temptations]);
-    expect(library.lendList[0]).toHaveProperty("user", matty);
-    expect(library.lendList[0]).toHaveProperty("books", [
-      original,
-      temptations
-    ]);
-    expect(library.lendList[0]).toHaveProperty("lendDate", new Date());
-    expect(library.lendList[0]).toHaveProperty(
-      "returnDate",
-      Misc.addDays(new Date(), 7)
-    );
-    expect(library.lendList[0]).toHaveProperty("penalty", 0);
-    expect(library.lendList).toHaveLength(1);
-    expect(library.bookList).toEqual([fightingDestiny, fixer]);
-  });
-
-  it("returnBook should delete rented books from lendedBookList and add these books back to bookList", () => {
-    library.returnBook(
-      matty,
-      Misc.addDays(new Date(), 10),
-      original,
-      temptations
-    );
-    expect(library._lendedBookList).toEqual([]);
-    expect(library.bookList).toEqual([
-      fightingDestiny,
-      fixer,
-      original,
-      temptations
-    ]);
-  });
-});
-
-describe("Library tests for errors", () => {
-  it("addBook insert argument other than of type IBook should throw an error", () => {
-    () => expect(library.addBook("books")).toThrowError();
-  });
-
-  it("addBook adding already existing book in library should throw error", () => {
-    () => expect(library.addBook(fixer)).toThrowError();
-  });
-
-  it("addUser insert argument other than of type IUser should thorw an error", () => {
-    () => expect(library.addUser("Morty")).toThrowError();
-  });
-
-  it("addUser adding already existing book in library should throw error", () => {
-    () => expect(library.addUser(matty)).toThrowError();
-  });
-
-  it("deleteBook insert argument other then of type IBook should throw an error", () => {
-    () => expect(library.deleteBook("cosos")).toThrowError();
-  });
-
-  it("deleteBook deleting not existing book in library should throw error ", () => {
-    () => expect(library.deleteBook(gambit)).toThrowError();
-  });
-
-  it("rentBook renting book already rented should throw error", () => {
     library.addUser(frank);
-    library.rentBook(frank, fixer, fightingDestiny);
-
-    () => expect(library.rentBook(frank, fixer)).toThrowError();
-  });
-
-  it("rentBook user not in library renting book should return error", () => {
-    const jerry = new User("Jerry");
-
-    () => expect(library.rentBook(jerry, temptations)).toThrowError();
-  });
-
-  it("returnBook user not in library returning books should throw an error", () => {
-    () => expect(library.returnBook(jerry, temptations)).toThrowError();
-  });
-
-  it("returnBook returnDate cannot be less than lendDate, should throw an error", () => {
-    () =>
-      expect(
-        library.returnBook(frank, new Date(2020, 12, 20), fixer)
-      ).toThrowError();
-  });
-
-  it("returnBook not all books returned by the user should throw error", () => {
     library.addUser(jerry);
-    library.rentBook(jerry, original, fixer);
-    () =>
-      expect(
-        library.returnBook(jerry, new Date(2021, 1, 6), fixer)
-      ).toThrowError();
-  });
 
-  it("returnBook too much returned books should throw error", () => {
-    () =>
-      expect(
-        library.returnBook(jerry, new Date(2021, 1, 6), fixer, temptations)
-      ).toThrowError();
+    test('3 new', () => {
+      const properUserLength = 3;
+
+      expect(library.userList).toHaveLength(properUserLength);
+    });
+
+    test('added same user twice', () => {
+      expect(() => library.addUser(matty)).toThrowError("User already exists.");      
+    });
+  })
+});
+
+describe('From Library', () => {
+  test('deleted 2 books', () => {
+    const properLength = 15;
+
+    library.deleteBook(lina);
+    library.deleteBook(moon);
+    expect(library.bookList).toHaveLength(properLength);
   });
 });
+
+describe('User', () => {
+
+  test('matty borrowed 4 books, frank 5 and jerry 3', () => {
+    const properBookListLength = 3;
+    library.rentBook(matty, gambit, fightingDestiny, temptations, original);
+    library.rentBook(frank, fixer, wyborny, nurt, ostatni, babiagora);
+    library.rentBook(jerry, szepty, korona, dywan);
+    
+    const booksAvailable = [zycie, freebirds, dom];
+
+    const mattysRentedBooks = [gambit, fightingDestiny, temptations, original];
+    const franksRentedBooks = [fixer, wyborny, nurt, ostatni, babiagora];
+    const jerrysRentedBooks = [szepty, korona, dywan];
+
+    const [mattysBooking] = library.lendList.filter(booking => booking.user.id === matty.id);
+    const [franksBooking] = library.lendList.filter(booking => booking.user.id === frank.id);
+    const [jerrysBooking] = library.lendList.filter(booking => booking.user.id === jerry.id);
+
+    expect(library.bookList).toHaveLength(properBookListLength);
+    expect(library.bookList).toEqual(booksAvailable);
+    expect(mattysBooking.books).toEqual(mattysRentedBooks);
+    expect(franksBooking.books).toEqual(franksRentedBooks);
+    expect(jerrysBooking.books).toEqual(jerrysRentedBooks);
+  });
+
+  test('that not existed was typed as borrower that caused error', () => {
+    expect(() => library.rentBook(jared, freebirds)).toThrowError("User does not exist in this library.");
+  });  
+});
+
