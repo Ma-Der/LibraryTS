@@ -45,6 +45,7 @@ export class Booking implements IBooking {
   }
 
   returnBook(returnDate: Date): string {
+    this.returnDate = returnDate;
     const penalty = this.setPenalty(returnDate);
     if (penalty > 0)
       console.log(
